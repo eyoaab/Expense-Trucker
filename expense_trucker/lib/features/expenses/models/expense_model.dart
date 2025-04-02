@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ExpenseModel {
   final String id;
@@ -56,26 +57,29 @@ class ExpenseModel {
 
   // Create from Json (Firestore)
   factory ExpenseModel.fromJson(Map<String, dynamic> json) {
+    // Helper function to parse date fields that might be Timestamps or milliseconds
+    DateTime parseDate(dynamic value) {
+      if (value is Timestamp) {
+        return value.toDate();
+      } else if (value is int) {
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      }
+      return DateTime.now();
+    }
+
     return ExpenseModel(
       id: json['id'] as String,
       userId: json['userId'] as String,
       title: json['title'] as String,
       category: json['category'] as String,
       amount: (json['amount'] as num).toDouble(),
-      date: DateTime.fromMillisecondsSinceEpoch(
-        (json['date'] as int),
-      ),
+      date: parseDate(json['date']),
       notes: json['notes'] as String?,
       receiptUrl: json['receiptUrl'] as String?,
       currency: json['currency'] as String? ?? 'USD',
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        (json['createdAt'] as int),
-      ),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(
-              (json['updatedAt'] as int),
-            )
-          : null,
+      createdAt: parseDate(json['createdAt']),
+      updatedAt:
+          json['updatedAt'] != null ? parseDate(json['updatedAt']) : null,
     );
   }
 
@@ -87,12 +91,12 @@ class ExpenseModel {
       'title': title,
       'category': category,
       'amount': amount,
-      'date': date.millisecondsSinceEpoch,
+      'date': Timestamp.fromDate(date),
       'notes': notes,
       'receiptUrl': receiptUrl,
       'currency': currency,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt?.millisecondsSinceEpoch,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
     };
   }
 

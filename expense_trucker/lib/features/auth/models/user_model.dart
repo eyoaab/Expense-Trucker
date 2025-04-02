@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String uid;
   final String email;
@@ -39,27 +41,30 @@ class UserModel {
 
   // Create from Json (Firestore)
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    DateTime parseTimestamp(dynamic timestamp) {
+      if (timestamp == null) return DateTime.now();
+
+      if (timestamp is Timestamp) {
+        return timestamp.toDate();
+      } else if (timestamp is Map) {
+        // Handle _seconds field format from serialized timestamp
+        if (timestamp['_seconds'] != null) {
+          return DateTime.fromMillisecondsSinceEpoch(
+            (timestamp['_seconds'] as int) * 1000,
+          );
+        }
+      }
+      return DateTime.now();
+    }
+
     return UserModel(
       uid: json['uid'] as String,
       email: json['email'] as String,
       name: json['name'] as String,
       photoUrl: json['photoUrl'] as String?,
       preferredCurrency: json['preferredCurrency'] as String? ?? 'USD',
-      createdAt: (json['createdAt'] as Map<String, dynamic>?)?['_seconds'] !=
-              null
-          ? DateTime.fromMillisecondsSinceEpoch(
-              ((json['createdAt'] as Map<String, dynamic>)['_seconds'] as int) *
-                  1000,
-            )
-          : DateTime.now(),
-      lastUpdated:
-          (json['lastUpdated'] as Map<String, dynamic>?)?['_seconds'] != null
-              ? DateTime.fromMillisecondsSinceEpoch(
-                  ((json['lastUpdated'] as Map<String, dynamic>)['_seconds']
-                          as int) *
-                      1000,
-                )
-              : DateTime.now(),
+      createdAt: parseTimestamp(json['createdAt']),
+      lastUpdated: parseTimestamp(json['lastUpdated']),
     );
   }
 
@@ -71,8 +76,8 @@ class UserModel {
       'name': name,
       'photoUrl': photoUrl,
       'preferredCurrency': preferredCurrency,
-      'createdAt': createdAt,
-      'lastUpdated': lastUpdated,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'lastUpdated': Timestamp.fromDate(lastUpdated),
     };
   }
 

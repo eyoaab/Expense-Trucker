@@ -20,7 +20,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   bool _isLoading = true;
   String _selectedMonth = DateFormat('MMMM').format(DateTime.now());
   int _selectedYear = DateTime.now().year;
-  Map<String, double> _spending = {};
 
   @override
   void initState() {
@@ -52,15 +51,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       final monthIndex = DateFormat('MMMM').parse(_selectedMonth).month;
       await budgetProvider.loadBudgetsByMonth(
           userId, monthIndex, _selectedYear);
-
-      // Load spending data for each category
-      final currentMonth = monthIndex;
-      final currentYear = _selectedYear;
-      _spending = await budgetProvider.getCategorySpending(
-        userId,
-        DateTime(currentYear, currentMonth, 1),
-        DateTime(currentYear, currentMonth + 1, 0), // Last day of the month
-      );
     } catch (e) {
       debugPrint('Error loading budget data: $e');
     } finally {
@@ -287,10 +277,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           ),
         );
 
-        // Calculate spending percentage
-        final spent = _spending[budget.category] ?? 0.0;
-        final percentage =
-            budget.amount > 0 ? (spent / budget.amount) * 100 : 0.0;
+        // Use the spent field from the budget model
+        final percentage = budget.percentageSpent;
         final isOverBudget = percentage > 100;
 
         Color progressColor;
@@ -385,7 +373,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Spent: \$${spent.toStringAsFixed(2)}',
+                      'Spent: \$${budget.spent.toStringAsFixed(2)}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     Text(
@@ -402,13 +390,21 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 if (isOverBudget) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'Over by: \$${(spent - budget.amount).toStringAsFixed(2)}',
+                    'Over by: \$${(budget.spent - budget.amount).toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.red,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
+                const SizedBox(height: 8),
+                Text(
+                  'Remaining: \$${budget.remaining > 0 ? budget.remaining.toStringAsFixed(2) : '0.00'}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: budget.remaining > 0 ? Colors.green : Colors.red,
+                  ),
+                ),
               ],
             ),
           ),

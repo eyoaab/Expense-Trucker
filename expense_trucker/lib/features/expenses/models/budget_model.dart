@@ -11,6 +11,7 @@ class BudgetModel {
   final String currency;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final double spent; // Track how much has been spent
 
   BudgetModel({
     required this.id,
@@ -22,6 +23,7 @@ class BudgetModel {
     required this.currency,
     required this.createdAt,
     this.updatedAt,
+    this.spent = 0.0, // Default to 0
   });
 
   // Create a new budget
@@ -44,6 +46,7 @@ class BudgetModel {
       currency: currency,
       createdAt: now,
       updatedAt: null,
+      spent: 0.0,
     );
   }
 
@@ -57,13 +60,24 @@ class BudgetModel {
       'month': month,
       'year': year,
       'currency': currency,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt?.millisecondsSinceEpoch,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
+      'spent': spent,
     };
   }
 
   // Create from Json (Firestore)
   factory BudgetModel.fromJson(Map<String, dynamic> json) {
+    // Helper function to parse date fields that might be Timestamps or milliseconds
+    DateTime parseDate(dynamic value) {
+      if (value is Timestamp) {
+        return value.toDate();
+      } else if (value is int) {
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      }
+      return DateTime.now();
+    }
+
     return BudgetModel(
       id: json['id'] as String,
       userId: json['userId'] as String,
@@ -72,14 +86,10 @@ class BudgetModel {
       month: json['month'] as int,
       year: json['year'] as int,
       currency: json['currency'] as String? ?? 'USD',
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        (json['createdAt'] as int),
-      ),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(
-              (json['updatedAt'] as int),
-            )
-          : null,
+      createdAt: parseDate(json['createdAt']),
+      updatedAt:
+          json['updatedAt'] != null ? parseDate(json['updatedAt']) : null,
+      spent: json['spent'] != null ? (json['spent'] as num).toDouble() : 0.0,
     );
   }
 
@@ -106,6 +116,7 @@ class BudgetModel {
           : (map['updatedAt'] is int)
               ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int)
               : null,
+      spent: map['spent'] != null ? (map['spent'] as num).toDouble() : 0.0,
     );
   }
 
@@ -124,6 +135,7 @@ class BudgetModel {
     String? currency,
     DateTime? createdAt,
     DateTime? updatedAt,
+    double? spent,
   }) {
     return BudgetModel(
       id: id ?? this.id,
@@ -135,6 +147,13 @@ class BudgetModel {
       currency: currency ?? this.currency,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      spent: spent ?? this.spent,
     );
   }
+
+  // Calculate budget remaining
+  double get remaining => amount - spent;
+
+  // Calculate percentage spent
+  double get percentageSpent => amount > 0 ? (spent / amount) * 100 : 0;
 }

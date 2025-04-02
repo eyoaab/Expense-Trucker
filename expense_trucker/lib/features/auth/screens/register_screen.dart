@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
+import '../../expenses/screens/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -47,7 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       if (result) {
-        _navigateToLoginScreen();
+        _navigateToHomeScreen();
       } else {
         setState(() {
           _errorMessage = "Failed to register. Please try again.";
@@ -65,6 +66,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _navigateToLoginScreen() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+    );
+  }
+
+  void _navigateToHomeScreen() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
     );
   }
 

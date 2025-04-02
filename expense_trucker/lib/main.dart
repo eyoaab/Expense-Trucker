@@ -182,11 +182,11 @@ void main() async {
       options: kIsWeb
           ? const FirebaseOptions(
               apiKey: "AIzaSyDekOHb35sGo7pymZJFUN5Hgy1md2Al_eA",
-              authDomain: "expense-trucker-app.firebaseapp.com",
-              projectId: "expense-trucker-app",
-              storageBucket: "expense-trucker-app.appspot.com",
-              messagingSenderId: "1077244688629",
-              appId: "1:1077244688629:web:be7a95d1d00da2d09a70db",
+              authDomain: "expense-trucker-2c5ca.firebaseapp.com",
+              projectId: "expense-trucker-2c5ca",
+              storageBucket: "expense-trucker-2c5ca.firebasestorage.app",
+              messagingSenderId: "933024527676",
+              appId: "1:933024527676:web:54ee3012f88b828841da39",
               measurementId: "G-EZCRZPNJ17")
           : null, // Mobile platforms should auto-detect google-services.json
     );
@@ -215,7 +215,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
           return DevicePreview(
-            enabled: true,
+            enabled: false,
             builder: (context) => MaterialApp(
               useInheritedMediaQuery: true,
               locale: DevicePreview.locale(context),
