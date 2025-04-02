@@ -182,33 +182,6 @@ class ExpenseRepository {
     }
   }
 
-  // Upload a receipt image from web to Firebase Storage
-  Future<String> _uploadWebReceipt(
-    String userId,
-    String expenseId,
-    Uint8List imageData,
-    String fileName,
-  ) async {
-    try {
-      final destination =
-          '${AppConstants.receiptStoragePath}/$userId/$expenseId/$fileName';
-
-      final ref = _storage.ref().child(destination);
-      final uploadTask = ref.putData(
-        imageData,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-
-      final snapshot = await uploadTask.whenComplete(() {});
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-
-      return downloadUrl;
-    } catch (e) {
-      debugPrint('Error in _uploadWebReceipt: $e');
-      rethrow;
-    }
-  }
-
   // Delete a receipt image from Firebase Storage
   Future<void> _deleteReceipt(String receiptUrl) async {
     try {
@@ -310,6 +283,33 @@ class ExpenseRepository {
     } catch (e) {
       debugPrint('Error in searchExpenses: $e');
       return [];
+    }
+  }
+
+  // Upload a receipt image from web to Firebase Storage
+  Future<String> _uploadWebReceipt(
+    String userId,
+    String expenseId,
+    Uint8List imageData,
+    String fileName,
+  ) async {
+    try {
+      final destination =
+          '${AppConstants.receiptStoragePath}/$userId/$expenseId/$fileName';
+
+      final ref = _storage.ref().child(destination);
+      final uploadTask = ref.putData(
+        imageData,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      final snapshot = await uploadTask.whenComplete(() {});
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      debugPrint('Error in _uploadWebReceipt: $e');
+      rethrow;
     }
   }
 }

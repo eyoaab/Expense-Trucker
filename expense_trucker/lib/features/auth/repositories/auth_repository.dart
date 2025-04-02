@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -60,7 +62,7 @@ class AuthRepository {
 
       return userCredential;
     } catch (e) {
-      debugPrint('Error in signUpWithEmailAndPassword: $e');
+      log('Error in signUpWithEmailAndPassword: $e');
       rethrow;
     }
   }
@@ -76,7 +78,7 @@ class AuthRepository {
         password: password,
       );
     } catch (e) {
-      debugPrint('Error in signInWithEmailAndPassword: $e');
+      log('Error in signInWithEmailAndPassword: $e');
       rethrow;
     }
   }
@@ -135,7 +137,7 @@ class AuthRepository {
 
       return userCredential;
     } catch (e) {
-      debugPrint('Error in signInWithGoogle: $e');
+      log('Error in signInWithGoogle: $e');
       rethrow;
     }
   }
@@ -148,13 +150,13 @@ class AuthRepository {
         try {
           await _googleSignIn.signOut();
         } catch (e) {
-          debugPrint('Error signing out of Google: $e');
+          log('Error signing out of Google: $e');
           // Continue with Firebase signout even if Google signout fails
         }
       }
       await _auth.signOut();
     } catch (e) {
-      debugPrint('Error in signOut: $e');
+      log('Error in signOut: $e');
       rethrow;
     }
   }
@@ -164,7 +166,7 @@ class AuthRepository {
     try {
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
-      debugPrint('Error in sendPasswordResetEmail: $e');
+      log('Error in sendPasswordResetEmail: $e');
       rethrow;
     }
   }
@@ -183,7 +185,7 @@ class AuthRepository {
 
       return null;
     } catch (e) {
-      debugPrint('Error in getUserData: $e');
+      log('Error in getUserData: $e');
       return null;
     }
   }
@@ -226,7 +228,7 @@ class AuthRepository {
         await _auth.currentUser!.updatePhotoURL(photoUrl);
       }
     } catch (e) {
-      debugPrint('Error in updateUserProfile: $e');
+      log('Error in updateUserProfile: $e');
       rethrow;
     }
   }
@@ -238,7 +240,7 @@ class AuthRepository {
         await _auth.currentUser!.updatePassword(newPassword);
       }
     } catch (e) {
-      debugPrint('Error in updatePassword: $e');
+      log('Error in updatePassword: $e');
       rethrow;
     }
   }
@@ -259,7 +261,7 @@ class AuthRepository {
         await user.delete();
       }
     } catch (e) {
-      debugPrint('Error in deleteAccount: $e');
+      log('Error in deleteAccount: $e');
       rethrow;
     }
   }

@@ -350,10 +350,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   // Sign up with Google button
                   OutlinedButton.icon(
                     onPressed: _isLoading ? null : _signUpWithGoogle,
-                    icon: Image.asset(
-                      'assets/icons/google_logo.png',
-                      height: 24,
-                    ),
+                    // icon: Image.asset(
+                    //   'assets/icons/google_logo.png',
+                    //   height: 24,
+                    // ),
+                    icon: const Icon(Icons.g_translate),
                     label: const Text('Sign up with Google'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),

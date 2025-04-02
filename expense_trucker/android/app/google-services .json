@@ -12,7 +12,12 @@
           "package_name": "com.example.expense_trucker"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "933024527676-bh0e7m1a3a8krfetumq4ee42s3uo012g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBo9jFqa_FFWUDFKD447qdAd18OuTLFyeY"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "933024527676-bh0e7m1a3a8krfetumq4ee42s3uo012g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
