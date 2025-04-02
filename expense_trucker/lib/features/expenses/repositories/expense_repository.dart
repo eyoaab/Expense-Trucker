@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import '../models/expense_model.dart';
 import '../../../core/constants/app_constants.dart';
@@ -68,11 +70,25 @@ class ExpenseRepository {
   }
 
   // Add a new expense
-  Future<void> addExpense(ExpenseModel expense, {File? receiptImage}) async {
+  Future<void> addExpense(
+    ExpenseModel expense, {
+    File? receiptImage,
+    Uint8List? webReceiptImage,
+    XFile? pickedFile,
+  }) async {
     try {
       // If receipt image is provided, upload it to Firebase Storage
       String? receiptUrl;
-      if (receiptImage != null) {
+      if (kIsWeb && webReceiptImage != null) {
+        final fileName = pickedFile?.name ??
+            'receipt_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        receiptUrl = await _uploadWebReceipt(
+          expense.userId,
+          expense.id,
+          webReceiptImage,
+          fileName,
+        );
+      } else if (receiptImage != null) {
         receiptUrl =
             await _uploadReceipt(expense.userId, expense.id, receiptImage);
       }
@@ -91,11 +107,25 @@ class ExpenseRepository {
   }
 
   // Update an existing expense
-  Future<void> updateExpense(ExpenseModel expense, {File? receiptImage}) async {
+  Future<void> updateExpense(
+    ExpenseModel expense, {
+    File? receiptImage,
+    Uint8List? webReceiptImage,
+    XFile? pickedFile,
+  }) async {
     try {
       // If receipt image is provided, upload it to Firebase Storage
       String? receiptUrl;
-      if (receiptImage != null) {
+      if (kIsWeb && webReceiptImage != null) {
+        final fileName = pickedFile?.name ??
+            'receipt_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        receiptUrl = await _uploadWebReceipt(
+          expense.userId,
+          expense.id,
+          webReceiptImage,
+          fileName,
+        );
+      } else if (receiptImage != null) {
         receiptUrl =
             await _uploadReceipt(expense.userId, expense.id, receiptImage);
       }
@@ -148,6 +178,33 @@ class ExpenseRepository {
       return downloadUrl;
     } catch (e) {
       debugPrint('Error in _uploadReceipt: $e');
+      rethrow;
+    }
+  }
+
+  // Upload a receipt image from web to Firebase Storage
+  Future<String> _uploadWebReceipt(
+    String userId,
+    String expenseId,
+    Uint8List imageData,
+    String fileName,
+  ) async {
+    try {
+      final destination =
+          '${AppConstants.receiptStoragePath}/$userId/$expenseId/$fileName';
+
+      final ref = _storage.ref().child(destination);
+      final uploadTask = ref.putData(
+        imageData,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      final snapshot = await uploadTask.whenComplete(() {});
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      debugPrint('Error in _uploadWebReceipt: $e');
       rethrow;
     }
   }

@@ -1,4 +1,7 @@
+import 'dart:developer';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
@@ -10,14 +13,106 @@ import 'features/expenses/providers/category_provider.dart';
 import 'features/expenses/providers/expense_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/screens/splash_screen.dart';
+import 'package:device_preview/device_preview.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  runApp(const AppInitializer());
+}
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
+class AppInitializer extends StatelessWidget {
+  const AppInitializer({super.key});
 
-  runApp(const MyApp());
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _initializeFirebase(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return const MyApp();
+        }
+
+        // Show loading screen while Firebase initializes with DevicePreview and themes
+        return DevicePreview(
+          enabled: true,
+          builder: (context) => MaterialApp(
+            useInheritedMediaQuery: true,
+            locale: DevicePreview.locale(context),
+            builder: DevicePreview.appBuilder,
+            title: 'Expense Tracker',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme(),
+            darkTheme: AppTheme.darkTheme(),
+            themeMode: ThemeMode.system,
+            home: Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // App logo
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_wallet,
+                        size: 50,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Expense Tracker',
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                    ),
+                    const SizedBox(height: 24),
+                    CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<FirebaseApp> _initializeFirebase() async {
+    FirebaseApp firebaseApp;
+
+    try {
+      // For web platform, we need to use different options
+      if (kIsWeb) {
+        firebaseApp = await Firebase.initializeApp(
+          options: const FirebaseOptions(
+              apiKey: "AIzaSyBBg2lY9C8cnxnwUJ8iE-KWXXLShyTgqtw",
+              authDomain: "expense-trucker-app.firebaseapp.com",
+              projectId: "expense-trucker-app",
+              storageBucket: "expense-trucker-app.appspot.com",
+              messagingSenderId: "1077244688629",
+              appId: "1:1077244688629:web:be7a95d1d00da2d09a70db",
+              measurementId: "G-EZCRZPNJ17"),
+        );
+      } else {
+        // For non-web platforms
+        firebaseApp = await Firebase.initializeApp();
+      }
+
+      log("Firebase initialized successfully");
+      return firebaseApp;
+    } catch (e) {
+      log("Firebase initialization error: $e");
+      rethrow;
+    }
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -34,18 +129,21 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => BudgetProvider()),
         ChangeNotifierProvider(create: (context) => CategoryProvider()),
       ],
-      child: Builder(
-        builder: (context) {
-          // Get the current theme mode
-          final themeProvider = Provider.of<ThemeProvider>(context);
-
-          return MaterialApp(
-            title: 'Expense Tracker',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme(),
-            darkTheme: AppTheme.darkTheme(),
-            themeMode: themeProvider.themeMode,
-            home: const SplashScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return DevicePreview(
+            enabled: true,
+            builder: (context) => MaterialApp(
+              useInheritedMediaQuery: true,
+              locale: DevicePreview.locale(context),
+              builder: DevicePreview.appBuilder,
+              title: 'Expense Tracker',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme(),
+              darkTheme: AppTheme.darkTheme(),
+              themeMode: themeProvider.themeMode,
+              home: const SplashScreen(),
+            ),
           );
         },
       ),

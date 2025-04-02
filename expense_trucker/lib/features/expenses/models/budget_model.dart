@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
 class BudgetModel {
@@ -5,9 +6,8 @@ class BudgetModel {
   final String userId;
   final String category;
   final double amount;
-  final String period; // 'monthly', 'weekly', etc.
+  final int month;
   final int year;
-  final int month; // 1-12
   final String currency;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -17,9 +17,8 @@ class BudgetModel {
     required this.userId,
     required this.category,
     required this.amount,
-    required this.period,
-    required this.year,
     required this.month,
+    required this.year,
     required this.currency,
     required this.createdAt,
     this.updatedAt,
@@ -30,9 +29,8 @@ class BudgetModel {
     required String userId,
     required String category,
     required double amount,
-    String period = 'monthly',
-    int? year,
-    int? month,
+    required int month,
+    required int year,
     required String currency,
   }) {
     final now = DateTime.now();
@@ -41,13 +39,27 @@ class BudgetModel {
       userId: userId,
       category: category,
       amount: amount,
-      period: period,
-      year: year ?? now.year,
-      month: month ?? now.month,
+      month: month,
+      year: year,
       currency: currency,
       createdAt: now,
       updatedAt: null,
     );
+  }
+
+  // Convert to Json (Firestore)
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'category': category,
+      'amount': amount,
+      'month': month,
+      'year': year,
+      'currency': currency,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'updatedAt': updatedAt?.millisecondsSinceEpoch,
+    };
   }
 
   // Create from Json (Firestore)
@@ -57,9 +69,8 @@ class BudgetModel {
       userId: json['userId'] as String,
       category: json['category'] as String,
       amount: (json['amount'] as num).toDouble(),
-      period: json['period'] as String,
-      year: json['year'] as int,
       month: json['month'] as int,
+      year: json['year'] as int,
       currency: json['currency'] as String? ?? 'USD',
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         (json['createdAt'] as int),
@@ -72,42 +83,58 @@ class BudgetModel {
     );
   }
 
-  // Convert to Json (Firestore)
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'userId': userId,
-      'category': category,
-      'amount': amount,
-      'period': period,
-      'year': year,
-      'month': month,
-      'currency': currency,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt?.millisecondsSinceEpoch,
-    };
+  Map<String, dynamic> toMap() {
+    return toJson();
   }
 
-  // Clone with method to update budget properties
+  factory BudgetModel.fromMap(Map<String, dynamic> map, String documentId) {
+    return BudgetModel(
+      id: documentId,
+      userId: map['userId'] ?? '',
+      category: map['category'] ?? '',
+      amount: (map['amount'] ?? 0.0).toDouble(),
+      month: map['month'] ?? 1,
+      year: map['year'] ?? DateTime.now().year,
+      currency: map['currency'] ?? 'USD',
+      createdAt: (map['createdAt'] is Timestamp)
+          ? (map['createdAt'] as Timestamp).toDate()
+          : (map['createdAt'] is int)
+              ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int)
+              : DateTime.now(),
+      updatedAt: (map['updatedAt'] is Timestamp)
+          ? (map['updatedAt'] as Timestamp).toDate()
+          : (map['updatedAt'] is int)
+              ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int)
+              : null,
+    );
+  }
+
+  factory BudgetModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return BudgetModel.fromMap(data, doc.id);
+  }
+
   BudgetModel copyWith({
+    String? id,
+    String? userId,
     String? category,
     double? amount,
-    String? period,
-    int? year,
     int? month,
+    int? year,
     String? currency,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return BudgetModel(
-      id: id,
-      userId: userId,
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
       category: category ?? this.category,
       amount: amount ?? this.amount,
-      period: period ?? this.period,
-      year: year ?? this.year,
       month: month ?? this.month,
+      year: year ?? this.year,
       currency: currency ?? this.currency,
-      createdAt: createdAt,
-      updatedAt: DateTime.now(),
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

@@ -303,7 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       OutlinedButton.icon(
                         onPressed: _isLoading ? null : _signInWithGoogle,
                         icon: Image.asset(
-                          'assets/images/google_logo.png',
+                          'assets/icons/google_logo.png',
                           height: 24,
                         ),
                         label: const Text('Sign in with Google'),

@@ -7,8 +7,21 @@ import '../../../core/constants/app_constants.dart';
 
 class AuthRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  late final GoogleSignIn _googleSignIn;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  AuthRepository() {
+    // Initialize GoogleSignIn with proper configuration based on platform
+    if (kIsWeb) {
+      _googleSignIn = GoogleSignIn(
+        clientId:
+            "1077244688629-e4g0fvk2e45qo38k12d2n4ujs7h16njk.apps.googleusercontent.com",
+        scopes: ['email', 'profile'],
+      );
+    } else {
+      _googleSignIn = GoogleSignIn();
+    }
+  }
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
@@ -71,29 +84,42 @@ class AuthRepository {
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Begin Google sign-in process
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      UserCredential? userCredential;
 
-      if (googleUser == null) {
-        // User canceled the sign-in
-        return null;
+      if (kIsWeb) {
+        // For web platform, use signInWithPopup
+        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+
+        userCredential = await _auth.signInWithPopup(googleProvider);
+      } else {
+        // For mobile platforms, use the regular flow
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+        if (googleUser == null) {
+          // User canceled the sign-in
+          return null;
+        }
+
+        // Obtain auth details from Google sign-in
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+
+        // Create a new credential for Firebase
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        // Sign in to Firebase with the Google credential
+        userCredential = await _auth.signInWithCredential(credential);
       }
 
-      // Obtain auth details from Google sign-in
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      // Create a new credential for Firebase
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // Sign in to Firebase with the Google credential
-      final userCredential = await _auth.signInWithCredential(credential);
-
       // Check if it's a new user and save to Firestore if it is
-      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+      if (userCredential != null &&
+          userCredential.user != null &&
+          (userCredential.additionalUserInfo?.isNewUser ?? false)) {
         final user = UserModel.createNew(
           uid: userCredential.user!.uid,
           email: userCredential.user!.email!,
@@ -117,7 +143,15 @@ class AuthRepository {
   // Sign out
   Future<void> signOut() async {
     try {
-      await _googleSignIn.signOut();
+      if (!kIsWeb) {
+        // Only try to sign out of Google on non-web platforms
+        try {
+          await _googleSignIn.signOut();
+        } catch (e) {
+          debugPrint('Error signing out of Google: $e');
+          // Continue with Firebase signout even if Google signout fails
+        }
+      }
       await _auth.signOut();
     } catch (e) {
       debugPrint('Error in signOut: $e');

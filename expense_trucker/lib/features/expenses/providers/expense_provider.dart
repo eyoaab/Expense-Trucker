@@ -1,13 +1,21 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../repositories/expense_repository.dart';
 import '../models/expense_model.dart';
 
 class ExpenseProvider extends ChangeNotifier {
-  final ExpenseRepository _expenseRepository = ExpenseRepository();
+  ExpenseRepository? _expenseRepository;
   bool _isLoading = false;
   String? _errorMessage;
   List<ExpenseModel>? _expenses;
+
+  // Lazy initialize the repository
+  ExpenseRepository get expenseRepository {
+    _expenseRepository ??= ExpenseRepository();
+    return _expenseRepository!;
+  }
 
   // Getters
   bool get isLoading => _isLoading;
@@ -22,7 +30,7 @@ class ExpenseProvider extends ChangeNotifier {
 
     try {
       // Get expenses from repository
-      final snapshot = await _expenseRepository.getExpensesStream(userId).first;
+      final snapshot = await expenseRepository.getExpensesStream(userId).first;
       _expenses = snapshot;
       _isLoading = false;
       notifyListeners();
@@ -45,7 +53,7 @@ class ExpenseProvider extends ChangeNotifier {
 
     try {
       // Get expenses by date range from repository
-      final snapshot = await _expenseRepository
+      final snapshot = await expenseRepository
           .getExpensesByDateRangeStream(userId, startDate, endDate)
           .first;
       _expenses = snapshot;
@@ -71,7 +79,7 @@ class ExpenseProvider extends ChangeNotifier {
 
     try {
       // Get expenses by category from repository
-      final snapshot = await _expenseRepository
+      final snapshot = await expenseRepository
           .getExpensesByCategoryStream(userId, category, startDate, endDate)
           .first;
       _expenses = snapshot;
@@ -91,7 +99,7 @@ class ExpenseProvider extends ChangeNotifier {
     required DateTime endDate,
   }) async {
     try {
-      return await _expenseRepository.getTotalExpenses(
+      return await expenseRepository.getTotalExpenses(
         userId,
         startDate,
         endDate,
@@ -110,7 +118,7 @@ class ExpenseProvider extends ChangeNotifier {
     required DateTime endDate,
   }) async {
     try {
-      return await _expenseRepository.getExpensesByCategory(
+      return await expenseRepository.getExpensesByCategory(
         userId,
         startDate,
         endDate,
@@ -132,7 +140,7 @@ class ExpenseProvider extends ChangeNotifier {
     }
 
     try {
-      return await _expenseRepository.searchExpenses(userId, query);
+      return await expenseRepository.searchExpenses(userId, query);
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
@@ -141,13 +149,23 @@ class ExpenseProvider extends ChangeNotifier {
   }
 
   // Add expense
-  Future<bool> addExpense(ExpenseModel expense, {File? receiptImage}) async {
+  Future<bool> addExpense(
+    ExpenseModel expense, {
+    File? receiptImage,
+    Uint8List? webReceiptImage,
+    XFile? pickedFile,
+  }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      await _expenseRepository.addExpense(expense, receiptImage: receiptImage);
+      await expenseRepository.addExpense(
+        expense,
+        receiptImage: receiptImage,
+        webReceiptImage: webReceiptImage,
+        pickedFile: pickedFile,
+      );
       await loadExpenses(expense.userId);
       return true;
     } catch (e) {
@@ -159,15 +177,22 @@ class ExpenseProvider extends ChangeNotifier {
   }
 
   // Update expense
-  Future<bool> updateExpense(ExpenseModel expense, {File? receiptImage}) async {
+  Future<bool> updateExpense(
+    ExpenseModel expense, {
+    File? receiptImage,
+    Uint8List? webReceiptImage,
+    XFile? pickedFile,
+  }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      await _expenseRepository.updateExpense(
+      await expenseRepository.updateExpense(
         expense,
         receiptImage: receiptImage,
+        webReceiptImage: webReceiptImage,
+        pickedFile: pickedFile,
       );
       await loadExpenses(expense.userId);
       return true;
@@ -190,7 +215,7 @@ class ExpenseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _expenseRepository.deleteExpense(expenseId, receiptUrl);
+      await expenseRepository.deleteExpense(expenseId, receiptUrl);
       await loadExpenses(userId);
       return true;
     } catch (e) {

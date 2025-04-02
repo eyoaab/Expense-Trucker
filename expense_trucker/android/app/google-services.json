@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "933024527676",
+    "project_id": "expense-trucker-2c5ca",
+    "storage_bucket": "expense-trucker-2c5ca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:933024527676:android:1d9be0944ffcae8841da39",
+        "android_client_info": {
+          "package_name": "com.example.expense_trucker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBo9jFqa_FFWUDFKD447qdAd18OuTLFyeY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

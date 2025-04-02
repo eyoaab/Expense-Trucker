@@ -4,10 +4,16 @@ import '../models/category_model.dart';
 import '../../../core/theme/app_theme.dart';
 
 class CategoryProvider extends ChangeNotifier {
-  final CategoryRepository _categoryRepository = CategoryRepository();
+  CategoryRepository? _categoryRepository;
   bool _isLoading = false;
   String? _errorMessage;
   List<CategoryModel>? _categories;
+
+  // Lazy initialize the repository
+  CategoryRepository get categoryRepository {
+    _categoryRepository ??= CategoryRepository();
+    return _categoryRepository!;
+  }
 
   // Getters
   bool get isLoading => _isLoading;
@@ -26,7 +32,7 @@ class CategoryProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _categories = await _categoryRepository.getCategories(userId);
+      _categories = await categoryRepository.getCategories(userId);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -60,7 +66,7 @@ class CategoryProvider extends ChangeNotifier {
         userId: userId,
       );
 
-      await _categoryRepository.addCategory(category);
+      await categoryRepository.addCategory(category);
       await loadCategories(userId);
       return true;
     } catch (e) {
@@ -89,7 +95,7 @@ class CategoryProvider extends ChangeNotifier {
         icon: icon,
       );
 
-      await _categoryRepository.updateCategory(updatedCategory);
+      await categoryRepository.updateCategory(updatedCategory);
       await loadCategories(category.userId);
       return true;
     } catch (e) {
@@ -107,7 +113,7 @@ class CategoryProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _categoryRepository.deleteCategory(categoryId);
+      await categoryRepository.deleteCategory(categoryId);
       await loadCategories(userId);
       return true;
     } catch (e) {
@@ -125,7 +131,7 @@ class CategoryProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _categoryRepository.deleteAllCustomCategories(userId);
+      await categoryRepository.deleteAllCustomCategories(userId);
       await loadCategories(userId);
       return true;
     } catch (e) {
