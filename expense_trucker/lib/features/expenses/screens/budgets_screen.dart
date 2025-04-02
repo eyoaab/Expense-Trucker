@@ -17,17 +17,24 @@ class BudgetsScreen extends StatefulWidget {
 }
 
 class _BudgetsScreenState extends State<BudgetsScreen> {
-  bool _isLoading = true;
+  bool _isLoading = false;
   String _selectedMonth = DateFormat('MMMM').format(DateTime.now());
   int _selectedYear = DateTime.now().year;
+  Map<String, double> _spending = {};
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // Defer initialization to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   Future<void> _loadData() async {
+    if (_isLoading) return;
+
     setState(() {
       _isLoading = true;
     });
@@ -40,7 +47,13 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           Provider.of<CategoryProvider>(context, listen: false);
 
       final userId = authProvider.currentUser?.uid;
-      if (userId == null) return;
+      if (userId == null) {
+        setState(() {
+          _isLoading = false;
+          _isInitialized = true;
+        });
+        return;
+      }
 
       // Load categories if not already loaded
       if (categoryProvider.categories.isEmpty) {
@@ -51,12 +64,26 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       final monthIndex = DateFormat('MMMM').parse(_selectedMonth).month;
       await budgetProvider.loadBudgetsByMonth(
           userId, monthIndex, _selectedYear);
+
+      // Load spending data for each category
+      final currentMonth = monthIndex;
+      final currentYear = _selectedYear;
+      _spending = await budgetProvider.getCategorySpending(
+        userId,
+        DateTime(currentYear, currentMonth, 1),
+        DateTime(currentYear, currentMonth + 1, 0), // Last day of the month
+      );
+
+      setState(() {
+        _isLoading = false;
+        _isInitialized = true;
+      });
     } catch (e) {
       debugPrint('Error loading budget data: $e');
-    } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _isInitialized = true;
         });
       }
     }
@@ -66,6 +93,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     if (month != _selectedMonth) {
       setState(() {
         _selectedMonth = month;
+        _isInitialized = false;
       });
       _loadData();
     }
@@ -75,6 +103,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     if (year != _selectedYear) {
       setState(() {
         _selectedYear = year;
+        _isInitialized = false;
       });
       _loadData();
     }
@@ -135,11 +164,11 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     );
 
     if (shouldDelete == true && mounted) {
-      try {
-        setState(() {
-          _isLoading = true;
-        });
+      setState(() {
+        _isLoading = true;
+      });
 
+      try {
         final budgetProvider =
             Provider.of<BudgetProvider>(context, listen: false);
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -160,10 +189,6 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         }
       } finally {
         if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-          // Reload data after deletion
           _loadData();
         }
       }
@@ -172,12 +197,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final budgetProvider = Provider.of<BudgetProvider>(context);
-
     return Scaffold(
-      body: _isLoading
+      body: !_isInitialized
           ? const Center(child: CircularProgressIndicator())
-          : _buildBody(budgetProvider),
+          : _buildContent(),
       floatingActionButton: FloatingActionButton(
         onPressed: _addBudget,
         child: const Icon(Icons.add),
@@ -185,22 +208,32 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
     );
   }
 
-  Widget _buildBody(BudgetProvider budgetProvider) {
+  Widget _buildContent() {
+    final budgetProvider = Provider.of<BudgetProvider>(context);
+
     return Column(
       children: [
         _buildMonthSelector(),
         Expanded(
-          child: budgetProvider.budgets.isEmpty
-              ? custom_widgets.EmptyStateWidget(
-                  message: 'No budgets found for this month',
-                  actionLabel: 'Add Budget',
-                  onAction: _addBudget,
-                  icon: Icons.account_balance_wallet,
-                )
-              : _buildBudgetList(budgetProvider),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _buildBudgetsList(budgetProvider),
         ),
       ],
     );
+  }
+
+  Widget _buildBudgetsList(BudgetProvider budgetProvider) {
+    if (budgetProvider.budgets.isEmpty) {
+      return custom_widgets.EmptyStateWidget(
+        message: 'No budgets found for this month',
+        actionLabel: 'Add Budget',
+        onAction: _addBudget,
+        icon: Icons.account_balance_wallet,
+      );
+    }
+
+    return _buildBudgetList(budgetProvider);
   }
 
   Widget _buildMonthSelector() {
@@ -277,7 +310,8 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           ),
         );
 
-        // Use the spent field from the budget model
+        // Use the spent field from the BudgetModel directly
+        final spent = budget.spent;
         final percentage = budget.percentageSpent;
         final isOverBudget = percentage > 100;
 
@@ -373,7 +407,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Spent: \$${budget.spent.toStringAsFixed(2)}',
+                      'Spent: \$${spent.toStringAsFixed(2)}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     Text(
@@ -390,7 +424,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 if (isOverBudget) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'Over by: \$${(budget.spent - budget.amount).toStringAsFixed(2)}',
+                    'Over by: \$${(spent - budget.amount).toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.red,
                       fontWeight: FontWeight.bold,

@@ -3,11 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../models/budget_model.dart';
 import '../repositories/budget_repository.dart';
-import 'expense_provider.dart';
+import '../repositories/expense_repository.dart';
 
 class BudgetProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final BudgetRepository _budgetRepository = BudgetRepository();
+  final ExpenseRepository _expenseRepository = ExpenseRepository();
   List<BudgetModel> _budgets = [];
   bool _isLoading = false;
   String? _errorMessage;
@@ -31,6 +32,10 @@ class BudgetProvider with ChangeNotifier {
 
       _budgets =
           snapshot.docs.map((doc) => BudgetModel.fromFirestore(doc)).toList();
+
+      // Don't await this call - run it after the UI is updated
+      _updateBudgetSpending(userId);
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -56,12 +61,81 @@ class BudgetProvider with ChangeNotifier {
 
       _budgets =
           snapshot.docs.map((doc) => BudgetModel.fromFirestore(doc)).toList();
+
+      // Don't await this call - run it after the UI is updated
+      _updateBudgetSpending(userId, month: month, year: year);
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Update budget spending amounts based on actual expenses
+  Future<void> _updateBudgetSpending(String userId,
+      {int? month, int? year}) async {
+    try {
+      // Skip if no budgets to update
+      if (_budgets.isEmpty) return;
+
+      List<BudgetModel> updatedBudgets = List.from(_budgets);
+      bool hasChanges = false;
+
+      // Get all expenses for this time period at once
+      final currentMonth = month ?? _budgets.first.month;
+      final currentYear = year ?? _budgets.first.year;
+
+      // Calculate start and end dates for the month
+      final startDate = DateTime(currentYear, currentMonth, 1);
+      final endDate =
+          DateTime(currentYear, currentMonth + 1, 0); // Last day of month
+
+      // Get all expenses for this time period
+      final expenses = await _expenseRepository
+          .getExpensesByDateRangeStream(userId, startDate, endDate)
+          .first;
+
+      // Group expenses by category
+      final Map<String, double> categoryTotals = {};
+      for (final expense in expenses) {
+        categoryTotals.update(
+          expense.category,
+          (value) => value + expense.amount,
+          ifAbsent: () => expense.amount,
+        );
+      }
+
+      // Update each budget with the corresponding category spending
+      for (int i = 0; i < updatedBudgets.length; i++) {
+        final budget = updatedBudgets[i];
+        final totalSpent = categoryTotals[budget.category] ?? 0.0;
+
+        // Only update if the spent amount has changed
+        if (totalSpent != budget.spent) {
+          final updatedBudget = budget.copyWith(spent: totalSpent);
+          updatedBudgets[i] = updatedBudget;
+          hasChanges = true;
+
+          // Fire and forget Firestore update
+          _firestore
+              .collection('budgets')
+              .doc(budget.id)
+              .update({'spent': totalSpent}).catchError((e) {
+            debugPrint('Error updating budget in Firestore: $e');
+          });
+        }
+      }
+
+      // Only update state if there are changes
+      if (hasChanges) {
+        _budgets = updatedBudgets;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error updating budget spending: $e');
     }
   }
 
@@ -152,25 +226,21 @@ class BudgetProvider with ChangeNotifier {
     DateTime endDate,
   ) async {
     try {
-      final expenseProvider = ExpenseProvider();
-      await expenseProvider.loadExpensesByDateRange(
-        userId,
-        startDate: startDate,
-        endDate: endDate,
-      );
+      // Use a simpler approach to avoid index issues
+      final expenses = await _expenseRepository
+          .getExpensesByDateRangeStream(userId, startDate, endDate)
+          .first;
 
-      final expenses = expenseProvider.expenses;
-      final spending = <String, double>{};
-
+      final Map<String, double> categoryTotals = {};
       for (final expense in expenses) {
-        spending.update(
+        categoryTotals.update(
           expense.category,
           (value) => value + expense.amount,
           ifAbsent: () => expense.amount,
         );
       }
 
-      return spending;
+      return categoryTotals;
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();

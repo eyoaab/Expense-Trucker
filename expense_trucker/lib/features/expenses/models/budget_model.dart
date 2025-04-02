@@ -11,7 +11,7 @@ class BudgetModel {
   final String currency;
   final DateTime createdAt;
   final DateTime? updatedAt;
-  final double spent; // Track how much has been spent
+  final double spent;
 
   BudgetModel({
     required this.id,
@@ -23,7 +23,7 @@ class BudgetModel {
     required this.currency,
     required this.createdAt,
     this.updatedAt,
-    this.spent = 0.0, // Default to 0
+    this.spent = 0.0,
   });
 
   // Create a new budget
@@ -74,6 +74,10 @@ class BudgetModel {
         return value.toDate();
       } else if (value is int) {
         return DateTime.fromMillisecondsSinceEpoch(value);
+      } else if (value is Map && value['_seconds'] != null) {
+        // Sometimes Firestore returns serialized timestamps
+        return DateTime.fromMillisecondsSinceEpoch(
+            (value['_seconds'] as int) * 1000);
       }
       return DateTime.now();
     }

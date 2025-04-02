@@ -49,7 +49,8 @@ class ExpenseProvider extends ChangeNotifier {
   }) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    // Use microtask to avoid setState during build
+    Future.microtask(() => notifyListeners());
 
     try {
       // Get expenses by date range from repository
@@ -58,11 +59,15 @@ class ExpenseProvider extends ChangeNotifier {
           .first;
       _expenses = snapshot;
       _isLoading = false;
-      notifyListeners();
+
+      // Use microtask to avoid setState during build
+      Future.microtask(() => notifyListeners());
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;
-      notifyListeners();
+
+      // Use microtask to avoid setState during build
+      Future.microtask(() => notifyListeners());
     }
   }
 
@@ -120,8 +125,8 @@ class ExpenseProvider extends ChangeNotifier {
     try {
       return await expenseRepository.getExpensesByCategory(
         userId,
-        startDate,
-        endDate,
+        startDate: startDate,
+        endDate: endDate,
       );
     } catch (e) {
       _errorMessage = e.toString();
@@ -130,7 +135,7 @@ class ExpenseProvider extends ChangeNotifier {
     }
   }
 
-  // Search expenses
+  // Search expenses by text query
   Future<List<ExpenseModel>> searchExpenses(
     String userId,
     String query,
@@ -139,10 +144,30 @@ class ExpenseProvider extends ChangeNotifier {
       return [];
     }
 
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
     try {
-      return await expenseRepository.searchExpenses(userId, query);
+      // Perform a basic search on currently loaded expenses
+      if (_expenses == null || _expenses!.isEmpty) {
+        await loadExpenses(userId);
+      }
+
+      final lowerQuery = query.toLowerCase();
+      final results = _expenses!.where((expense) {
+        return expense.title.toLowerCase().contains(lowerQuery) ||
+            expense.category.toLowerCase().contains(lowerQuery) ||
+            (expense.notes != null &&
+                expense.notes!.toLowerCase().contains(lowerQuery));
+      }).toList();
+
+      _isLoading = false;
+      notifyListeners();
+      return results;
     } catch (e) {
       _errorMessage = e.toString();
+      _isLoading = false;
       notifyListeners();
       return [];
     }

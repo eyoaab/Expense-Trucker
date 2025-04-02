@@ -63,6 +63,10 @@ class ExpenseModel {
         return value.toDate();
       } else if (value is int) {
         return DateTime.fromMillisecondsSinceEpoch(value);
+      } else if (value is Map && value['_seconds'] != null) {
+        // Sometimes Firestore returns serialized timestamps
+        return DateTime.fromMillisecondsSinceEpoch(
+            (value['_seconds'] as int) * 1000);
       }
       return DateTime.now();
     }
