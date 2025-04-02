@@ -9,7 +9,6 @@ import '../../../core/utils/network_utils.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/models/user_model.dart';
 import '../../auth/screens/login_screen.dart';
-import '../../../core/constants/app_constants.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -27,11 +26,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = false;
   String? _selectedCurrency;
 
-  // Use AppConstants for currencies
-  final List<String> _currencies = AppConstants.supportedCurrencies;
+  final List<String> _currencies = [
+    'USD',
+    'EUR',
+    'GBP',
+    'JPY',
+    'CAD',
+    'AUD',
+    'CHF',
+    'CNY',
+    'INR',
+    'BRL'
+  ];
 
-  // Use AppConstants for currency symbols
-  final Map<String, String> _currencySymbols = AppConstants.currencySymbols;
+  final Map<String, String> _currencySymbols = {
+    'USD': '\$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'CAD': 'C\$',
+    'AUD': 'A\$',
+    'CHF': 'CHF',
+    'CNY': '¥',
+    'INR': '₹',
+    'BRL': 'R\$',
+  };
 
   @override
   void initState() {
