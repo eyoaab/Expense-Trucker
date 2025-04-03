@@ -146,8 +146,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: _currentIndex == 0
           ? FloatingActionButton(
+              backgroundColor: const Color(0xFFF9AA33),
               onPressed: _addExpense,
-              child: const Icon(Icons.add),
+              child: const Icon(
+                Icons.add,
+                color: Colors.white,
+              ),
             )
           : null,
     );

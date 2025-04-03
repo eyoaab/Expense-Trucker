@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
           return DevicePreview(
-            enabled: false,
+            enabled: true,
             builder: (context) => MaterialApp(
               useInheritedMediaQuery: true,
               locale: DevicePreview.locale(context),

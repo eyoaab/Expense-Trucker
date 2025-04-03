@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const Color _primaryLightColor = Color(0xFF4A6572);
-  static const Color _primaryDarkColor = Color(0xFF344955);
+  static const Color _primaryDarkColor = Color(0xFF1E1E1E);
   static const Color _accentColor = Color(0xFFF9AA33);
 
   static const Color _lightBackgroundColor = Color(0xFFF5F5F5);
@@ -33,7 +33,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: _primaryLightColor,
         secondary: _accentColor,
         surface: _lightBackgroundColor,
@@ -48,14 +48,14 @@ class AppTheme {
         ThemeData.light().textTheme,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: _primaryLightColor,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.grey,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: Colors.grey,
         ),
       ),
       cardTheme: const CardTheme(
@@ -122,7 +122,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: _primaryDarkColor,
         secondary: _accentColor,
         surface: _darkBackgroundColor,
@@ -137,14 +137,14 @@ class AppTheme {
         ThemeData.dark().textTheme,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: _primaryDarkColor,
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF1E1E1E),
+        foregroundColor: Colors.grey,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: Colors.grey,
         ),
       ),
       cardTheme: const CardTheme(
