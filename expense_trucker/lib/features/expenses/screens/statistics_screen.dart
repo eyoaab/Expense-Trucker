@@ -139,22 +139,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _expenses.isEmpty
-              ? custom_widgets.EmptyStateWidget(
-                  message: 'No expenses found for the selected period',
-                  icon: Icons.bar_chart,
-                )
-              : _buildStatisticsContent(),
-    );
-  }
-
-  Widget _buildStatisticsContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+        body: SingleChildScrollView(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Period selector
           Card(
@@ -174,8 +160,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         child: DropdownButtonFormField<String>(
                           value: _selectedPeriod,
                           decoration: const InputDecoration(
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 12),
+                            contentPadding: EdgeInsets.only(left: 4),
                             border: OutlineInputBorder(),
                           ),
                           items: _periods.map((period) {
@@ -193,8 +178,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                           child: DropdownButtonFormField<int>(
                             value: _selectedMonth,
                             decoration: const InputDecoration(
-                              contentPadding:
-                                  EdgeInsets.symmetric(horizontal: 12),
+                              contentPadding: EdgeInsets.only(left: 4),
                               border: OutlineInputBorder(),
                             ),
                             items: List.generate(12, (index) {
@@ -215,8 +199,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         child: DropdownButtonFormField<int>(
                           value: _selectedYear,
                           decoration: const InputDecoration(
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 12),
+                            contentPadding: EdgeInsets.only(left: 4),
                             border: OutlineInputBorder(),
                           ),
                           items: List.generate(5, (index) {
@@ -237,7 +220,25 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             ),
           ),
           const SizedBox(height: 16),
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _expenses.isEmpty
+                  ? const custom_widgets.EmptyStateWidget(
+                      message: 'No expenses found for the selected period',
+                      icon: Icons.bar_chart,
+                    )
+                  : _buildStatisticsContent(),
+        ],
+      ),
+    ));
+  }
 
+  Widget _buildStatisticsContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           // Expense summary
           Card(
             child: Padding(
@@ -251,10 +252,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '\$${_totalExpenses.toStringAsFixed(2)}',
+                    _totalExpenses.toStringAsFixed(2),
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
                   ),
                   const SizedBox(height: 8),
@@ -280,10 +281,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    height: 240,
-                    child: _buildPieChart(),
-                  ),
+                  _buildPieChart(),
                 ],
               ),
             ),
@@ -317,7 +315,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     return Column(
       children: [
-        Expanded(
+        AspectRatio(
+          aspectRatio: 1, // Maintain a square aspect ratio for the PieChart
           child: PieChart(
             PieChartData(
               sectionsSpace: 2,
@@ -466,7 +465,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ),
               ),
               Text(
-                '\$${amount.toStringAsFixed(2)}',
+                amount.toStringAsFixed(2),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
