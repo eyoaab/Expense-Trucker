@@ -172,6 +172,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                           onChanged: _changePeriod,
                         ),
                       ),
+                      // second child
                       if (_selectedPeriod == 'Monthly') ...[
                         const SizedBox(width: 8),
                         Expanded(
@@ -194,6 +195,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                           ),
                         ),
                       ],
+                      // third child
                       const SizedBox(width: 8),
                       Expanded(
                         child: DropdownButtonFormField<int>(
