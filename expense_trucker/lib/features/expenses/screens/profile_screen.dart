@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../core/utils/network_utils.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/models/user_model.dart';
 import '../../auth/screens/login_screen.dart';
@@ -27,6 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _selectedCurrency;
 
   final List<String> _currencies = [
+    'ETB',
     'USD',
     'EUR',
     'GBP',
@@ -40,6 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   ];
 
   final Map<String, String> _currencySymbols = {
+    'ETB': 'Br',
     'USD': '\$',
     'EUR': '€',
     'GBP': '£',
@@ -279,10 +282,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // Currency dropdown
                         DropdownButtonFormField<String>(
                           value: _selectedCurrency,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Preferred Currency',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.currency_exchange),
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.currency_exchange),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.info_outline),
+                              onPressed: () {
+                                _showCurrencyInfoDialog();
+                              },
+                              tooltip: 'Currency Info',
+                            ),
                           ),
                           items: _currencies.map((currency) {
                             return DropdownMenuItem<String>(
@@ -326,12 +336,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     title: const Text('App Theme'),
-                    subtitle: const Text('Change app appearance'),
+                    subtitle: Text(_getThemeText(
+                        Provider.of<ThemeProvider>(context).themeMode)),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Show theme selection dialog
-                      // This will be implemented in a separate PR
-                    },
+                    onTap: _showThemeSelectionDialog,
                   ),
 
                   ListTile(
@@ -443,5 +451,196 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return null;
+  }
+
+  Map<String, dynamic> _getCurrencyInfo(String currencyCode) {
+    final Map<String, Map<String, dynamic>> currencyInfo = {
+      'ETB': {
+        'name': 'Ethiopian Birr',
+        'code': 'ETB',
+        'symbol': 'Br',
+        'country': 'Ethiopia',
+        'info':
+            'The Birr has been the currency of Ethiopia since 1893. The name "Birr" comes from the local word for silver. It is subdivided into 100 santim.'
+      },
+      'USD': {
+        'name': 'US Dollar',
+        'code': 'USD',
+        'symbol': '\$',
+        'country': 'United States',
+        'info': 'The world\'s primary reserve currency.'
+      },
+      'EUR': {
+        'name': 'Euro',
+        'code': 'EUR',
+        'symbol': '€',
+        'country': 'Euro Zone',
+        'info':
+            'Official currency of 19 of the 27 member states of the European Union.'
+      },
+      'GBP': {
+        'name': 'British Pound',
+        'code': 'GBP',
+        'symbol': '£',
+        'country': 'United Kingdom',
+        'info': 'The world\'s oldest currency still in use.'
+      },
+      'JPY': {
+        'name': 'Japanese Yen',
+        'code': 'JPY',
+        'symbol': '¥',
+        'country': 'Japan',
+        'info': 'Third most traded currency in the foreign exchange market.'
+      },
+      'CNY': {
+        'name': 'Chinese Yuan',
+        'code': 'CNY',
+        'symbol': '¥',
+        'country': 'China',
+        'info': 'Official currency of the People\'s Republic of China.'
+      },
+      'INR': {
+        'name': 'Indian Rupee',
+        'code': 'INR',
+        'symbol': '₹',
+        'country': 'India',
+        'info': 'The official currency of India.'
+      }
+    };
+
+    // Default to USD if currency not found in our info map
+    return currencyInfo[currencyCode] ??
+        {
+          'name': currencyCode,
+          'code': currencyCode,
+          'symbol': _currencySymbols[currencyCode] ?? currencyCode,
+          'country': 'Multiple Countries',
+          'info': 'No additional information available'
+        };
+  }
+
+  void _showCurrencyInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final currencyInfo = _getCurrencyInfo(_selectedCurrency ?? 'ETB');
+        return AlertDialog(
+          title: Text('${currencyInfo['name']} (${currencyInfo['code']})'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: Icon(Icons.monetization_on,
+                    color: Theme.of(context).colorScheme.primary),
+                title: const Text('Symbol'),
+                subtitle: Text(currencyInfo['symbol']),
+              ),
+              ListTile(
+                leading: Icon(Icons.flag,
+                    color: Theme.of(context).colorScheme.primary),
+                title: const Text('Country'),
+                subtitle: Text(currencyInfo['country']),
+              ),
+              if (currencyInfo['info'] != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: Text(currencyInfo['info']!),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _getThemeText(ThemeMode themeMode) {
+    switch (themeMode) {
+      case ThemeMode.light:
+        return 'Light Theme';
+      case ThemeMode.dark:
+        return 'Dark Theme';
+      case ThemeMode.system:
+        return 'System Default';
+      default:
+        return 'System Default';
+    }
+  }
+
+  void _showThemeSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final themeProvider = Provider.of<ThemeProvider>(context);
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.dark_mode,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              const Text('Select Theme'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                title: const Text('Light Theme'),
+                subtitle: const Text('Use light colors'),
+                value: ThemeMode.light,
+                groupValue: themeProvider.themeMode,
+                onChanged: (ThemeMode? value) {
+                  if (value != null) {
+                    themeProvider.setThemeMode(value);
+                    Navigator.pop(context);
+                  }
+                },
+                secondary: const Icon(Icons.light_mode),
+              ),
+              RadioListTile<ThemeMode>(
+                title: const Text('Dark Theme'),
+                subtitle: const Text('Use dark colors'),
+                value: ThemeMode.dark,
+                groupValue: themeProvider.themeMode,
+                onChanged: (ThemeMode? value) {
+                  if (value != null) {
+                    themeProvider.setThemeMode(value);
+                    Navigator.pop(context);
+                  }
+                },
+                secondary: const Icon(Icons.nightlight_round),
+              ),
+              RadioListTile<ThemeMode>(
+                title: const Text('System Default'),
+                subtitle: const Text('Follow system theme'),
+                value: ThemeMode.system,
+                groupValue: themeProvider.themeMode,
+                onChanged: (ThemeMode? value) {
+                  if (value != null) {
+                    themeProvider.setThemeMode(value);
+                    Navigator.pop(context);
+                  }
+                },
+                secondary: const Icon(Icons.auto_mode),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

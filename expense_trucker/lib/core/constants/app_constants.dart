@@ -9,7 +9,7 @@ class AppConstants {
   static const String firstTimeUserKey = 'first_time_user';
 
   // Default Values
-  static const String defaultCurrencyCode = 'USD';
+  static const String defaultCurrencyCode = 'ETB';
   static const double defaultBudgetAmount = 1000.0;
 
   // Supported Currencies

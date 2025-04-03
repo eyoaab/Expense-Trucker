@@ -6,9 +6,13 @@ class FormatUtils {
   static String formatCurrency(double amount, String currencyCode) {
     final String currencySymbol =
         AppConstants.currencySymbols[currencyCode] ?? '\$';
+
+    // ETB typically uses 2 decimal places
+    final int decimalDigits = 2;
+
     final NumberFormat formatter = NumberFormat.currency(
       symbol: currencySymbol,
-      decimalDigits: 2,
+      decimalDigits: decimalDigits,
     );
     return formatter.format(amount);
   }

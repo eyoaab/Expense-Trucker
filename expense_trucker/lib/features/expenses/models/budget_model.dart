@@ -89,7 +89,7 @@ class BudgetModel {
       amount: (json['amount'] as num).toDouble(),
       month: json['month'] as int,
       year: json['year'] as int,
-      currency: json['currency'] as String? ?? 'USD',
+      currency: json['currency'] as String? ?? 'ETB',
       createdAt: parseDate(json['createdAt']),
       updatedAt:
           json['updatedAt'] != null ? parseDate(json['updatedAt']) : null,
@@ -109,7 +109,7 @@ class BudgetModel {
       amount: (map['amount'] ?? 0.0).toDouble(),
       month: map['month'] ?? 1,
       year: map['year'] ?? DateTime.now().year,
-      currency: map['currency'] ?? 'USD',
+      currency: map['currency'] ?? 'ETB',
       createdAt: (map['createdAt'] is Timestamp)
           ? (map['createdAt'] as Timestamp).toDate()
           : (map['createdAt'] is int)

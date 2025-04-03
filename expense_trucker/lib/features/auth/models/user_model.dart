@@ -23,7 +23,7 @@ class UserModel {
     required String email,
     required String name,
     String? photoUrl,
-    String preferredCurrency = 'USD',
+    String preferredCurrency = 'ETB',
   }) {
     final now = DateTime.now();
     return UserModel(
@@ -44,7 +44,7 @@ class UserModel {
       email: json['email'] as String,
       name: json['name'] as String,
       photoUrl: json['photoUrl'] as String?,
-      preferredCurrency: json['preferredCurrency'] as String? ?? 'USD',
+      preferredCurrency: json['preferredCurrency'] as String? ?? 'ETB',
       createdAt: (json['createdAt'] as Map<String, dynamic>?)?['_seconds'] !=
               null
           ? DateTime.fromMillisecondsSinceEpoch(

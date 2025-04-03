@@ -80,7 +80,7 @@ class ExpenseModel {
       date: parseDate(json['date']),
       notes: json['notes'] as String?,
       receiptUrl: json['receiptUrl'] as String?,
-      currency: json['currency'] as String? ?? 'USD',
+      currency: json['currency'] as String? ?? 'ETB',
       createdAt: parseDate(json['createdAt']),
       updatedAt:
           json['updatedAt'] != null ? parseDate(json['updatedAt']) : null,
