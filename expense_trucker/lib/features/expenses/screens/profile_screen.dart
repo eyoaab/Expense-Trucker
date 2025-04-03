@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
+import 'package:firebase_auth/firebase_auth.dart' as firebaseAuth;
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
@@ -347,12 +347,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Icons.security,
                       color: Theme.of(context).colorScheme.primary,
                     ),
-                    title: const Text('Reset Password'),
-                    subtitle: const Text('Change your account password'),
+                    title: const Text('Change Password'),
+                    subtitle: const Text('Update your account password'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Navigate to reset password screen or show dialog
-                    },
+                    onTap: _showChangePasswordDialog,
                   ),
 
                   const SizedBox(height: 24),
@@ -378,7 +376,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  ImageProvider? _getProfileImage(User? user, UserModel? userData) {
+  ImageProvider? _getProfileImage(
+      firebaseAuth.User? user, UserModel? userData) {
     if (kIsWeb && _webProfileImage != null) {
       return MemoryImage(_webProfileImage!);
     }
@@ -400,7 +399,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return null;
   }
 
-  Widget? _getProfileImageWidget(User? user, UserModel? userData) {
+  Widget? _getProfileImageWidget(firebaseAuth.User? user, UserModel? userData) {
     // Show initials if no image is available
     if ((kIsWeb && _webProfileImage == null && _profileImage == null) ||
         (!kIsWeb && _profileImage == null)) {
@@ -642,5 +641,338 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       },
     );
+  }
+
+  void _showChangePasswordDialog() {
+    final _currentPasswordController = TextEditingController();
+    final _newPasswordController = TextEditingController();
+    final _confirmPasswordController = TextEditingController();
+    bool _obscureCurrentPassword = true;
+    bool _obscureNewPassword = true;
+    bool _obscureConfirmPassword = true;
+    bool _isChangingPassword = false;
+    String? _changePasswordError;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.security,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Change Password'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_changePasswordError != null)
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .error
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _changePasswordError!,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    TextFormField(
+                      controller: _currentPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Current Password',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureCurrentPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              _obscureCurrentPassword =
+                                  !_obscureCurrentPassword;
+                            });
+                          },
+                        ),
+                      ),
+                      obscureText: _obscureCurrentPassword,
+                      enabled: !_isChangingPassword,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _newPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'New Password',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureNewPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              _obscureNewPassword = !_obscureNewPassword;
+                            });
+                          },
+                        ),
+                        helperText: 'At least 6 characters',
+                      ),
+                      obscureText: _obscureNewPassword,
+                      enabled: !_isChangingPassword,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Confirm New Password',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_reset),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
+                            });
+                          },
+                        ),
+                      ),
+                      obscureText: _obscureConfirmPassword,
+                      enabled: !_isChangingPassword,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed:
+                      _isChangingPassword ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: _isChangingPassword
+                      ? null
+                      : () {
+                          _changePasswordInternal(
+                            setDialogState,
+                            dialogContext,
+                            _currentPasswordController.text,
+                            _newPasswordController.text,
+                            _confirmPasswordController.text,
+                            (error) {
+                              setDialogState(() {
+                                _changePasswordError = error;
+                              });
+                            },
+                            () {
+                              setDialogState(() {
+                                _isChangingPassword = true;
+                              });
+                            },
+                            () {
+                              setDialogState(() {
+                                _isChangingPassword = false;
+                              });
+                            },
+                          );
+                        },
+                  child: _isChangingPassword
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Update Password'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _changePasswordInternal(
+    Function(Function()) setDialogState,
+    BuildContext dialogContext,
+    String currentPassword,
+    String newPassword,
+    String confirmPassword,
+    Function(String) setError,
+    Function startLoading,
+    Function endLoading,
+  ) async {
+    // Clear any previous errors
+    setError('');
+
+    // Validate inputs
+    if (currentPassword.isEmpty) {
+      setError('Please enter your current password');
+      return;
+    }
+
+    if (newPassword.isEmpty) {
+      setError('Please enter a new password');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (confirmPassword != newPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    // Start loading
+    startLoading();
+
+    try {
+      // Get current user
+      final user = firebaseAuth.FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
+
+      // Get user's email
+      final email = user.email;
+
+      if (email == null || email.isEmpty) {
+        throw Exception('User email not found');
+      }
+
+      // Create a credential with the current password
+      final credential = firebaseAuth.EmailAuthProvider.credential(
+        email: email,
+        password: currentPassword,
+      );
+
+      // Reauthenticate user
+      await user.reauthenticateWithCredential(credential);
+
+      // Update password
+      await user.updatePassword(newPassword);
+
+      // Close dialog
+      Navigator.pop(dialogContext);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password updated successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      String errorMessage = 'Failed to update password';
+
+      if (e.toString().contains('wrong-password')) {
+        errorMessage = 'Current password is incorrect';
+      } else if (e.toString().contains('requires-recent-login')) {
+        errorMessage =
+            'For security reasons, please log in again before changing your password';
+      }
+
+      setError(errorMessage);
+      endLoading();
+    }
+  }
+
+  Future<void> _changePassword(String currentPassword, String newPassword,
+      String confirmPassword) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Get current user
+      final user = firebaseAuth.FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
+
+      // Get user's email
+      final email = user.email;
+
+      if (email == null || email.isEmpty) {
+        throw Exception('User email not found');
+      }
+
+      // Create a credential with the current password
+      final credential = firebaseAuth.EmailAuthProvider.credential(
+        email: email,
+        password: currentPassword,
+      );
+
+      // Reauthenticate user
+      await user.reauthenticateWithCredential(credential);
+
+      // Update password
+      await user.updatePassword(newPassword);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password updated successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      String errorMessage = 'Failed to update password';
+
+      if (e.toString().contains('wrong-password')) {
+        errorMessage = 'Current password is incorrect';
+      } else if (e.toString().contains('requires-recent-login')) {
+        errorMessage =
+            'For security reasons, please log in again before changing your password';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 }
