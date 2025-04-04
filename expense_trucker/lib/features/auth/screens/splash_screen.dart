@@ -144,11 +144,13 @@ class _SplashScreenState extends State<SplashScreen>
                     const SizedBox(height: 24),
                     Text(
                       'Expense Tracker',
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSecondary,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     Text(

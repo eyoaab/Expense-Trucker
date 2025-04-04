@@ -143,7 +143,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   Icon(
                     Icons.account_balance_wallet,
                     size: 70,
-                    color: theme.colorScheme.primary,
+                    color: theme.colorScheme.onSecondary,
                   ),
                   const SizedBox(height: 24),
 
@@ -152,7 +152,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     'Create Account',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
+                      color: theme.colorScheme.onSecondary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -354,8 +354,15 @@ class _SignupScreenState extends State<SignupScreen> {
                     //   'assets/icons/google_logo.png',
                     //   height: 24,
                     // ),
-                    icon: const Icon(Icons.g_translate),
-                    label: const Text('Sign up with Google'),
+                    icon: Icon(
+                      Icons.g_mobiledata,
+                      size: 30,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+
+                    label: Text('Sign up with Google',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSecondary)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

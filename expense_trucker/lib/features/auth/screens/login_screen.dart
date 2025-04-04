@@ -129,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Icon(
                   Icons.account_balance_wallet,
                   size: 80,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).colorScheme.onSecondary,
                 ),
                 const SizedBox(height: 24),
 
@@ -138,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   'Welcome Back',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Theme.of(context).colorScheme.onSecondary,
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -246,20 +246,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       ElevatedButton(
                         onPressed: _isLoading ? null : _signIn,
                         style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.secondary,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: _isLoading
-                            ? const SizedBox(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_isLoading)
+                              const SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
+                                  color: Colors.white,
                                 ),
-                              )
-                            : const Text('Sign In'),
+                              ),
+                            if (_isLoading) const SizedBox(width: 8),
+                            Text(
+                              _isLoading ? 'Signing In...' : 'Sign In',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 24),
 
@@ -306,9 +318,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         //   'assets/icons/google_logo.png',
                         //   height: 24,
                         // ),
-                        icon: const Icon(Icons.g_translate),
+                        icon: Icon(
+                          Icons.g_mobiledata,
+                          size: 30,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
 
-                        label: const Text('Sign in with Google'),
+                        label: Text('Sign in with Google',
+                            style: TextStyle(
+                                color:
+                                    Theme.of(context).colorScheme.onSecondary)),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
