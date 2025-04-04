@@ -248,7 +248,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             ),
           ),
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.secondary,
+                ))
               : _expenses.isEmpty
                   ? const custom_widgets.EmptyStateWidget(
                       message: 'No expenses found for the selected period',

@@ -203,7 +203,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.secondary,
+            ))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -220,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           radius: 60,
                           backgroundColor: Theme.of(context)
                               .colorScheme
-                              .primary
+                              .secondary
                               .withOpacity(0.1),
                           backgroundImage: _getProfileImage(user, userData),
                           child: _getProfileImageWidget(user, userData),
@@ -333,7 +336,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ListTile(
                     leading: Icon(
                       Icons.dark_mode,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.onSecondary,
                     ),
                     title: const Text('App Theme'),
                     subtitle: Text(_getThemeText(
@@ -345,7 +348,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ListTile(
                     leading: Icon(
                       Icons.security,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.onSecondary,
                     ),
                     title: const Text('Change Password'),
                     subtitle: const Text('Update your account password'),
@@ -436,7 +439,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
+              color: Theme.of(context).colorScheme.secondary,
             ),
           );
         }
@@ -602,6 +605,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Navigator.pop(context);
                   }
                 },
+                activeColor: Theme.of(context).colorScheme.secondary,
                 secondary: const Icon(Icons.light_mode),
               ),
               RadioListTile<ThemeMode>(
@@ -615,6 +619,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Navigator.pop(context);
                   }
                 },
+                activeColor: Theme.of(context).colorScheme.secondary,
                 secondary: const Icon(Icons.nightlight_round),
               ),
               RadioListTile<ThemeMode>(
@@ -628,6 +633,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Navigator.pop(context);
                   }
                 },
+                activeColor: Theme.of(context).colorScheme.secondary,
                 secondary: const Icon(Icons.auto_mode),
               ),
             ],
@@ -663,7 +669,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Icon(
                     Icons.security,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Theme.of(context).colorScheme.secondary,
                   ),
                   const SizedBox(width: 8),
                   const Text('Change Password'),

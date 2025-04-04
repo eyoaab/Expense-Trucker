@@ -199,7 +199,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: !_isInitialized
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.secondary,
+            ))
           : _buildContent(),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFF9AA33),
@@ -220,7 +223,10 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         _buildMonthSelector(),
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.secondary,
+                ))
               : _buildBudgetsList(budgetProvider),
         ),
       ],
