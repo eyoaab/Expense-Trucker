@@ -6,12 +6,10 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../core/utils/network_utils.dart';
-import '../../../core/utils/currency_utils.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/models/user_model.dart';
 import '../../auth/screens/login_screen.dart';
-import '../widgets/profile_widgets.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -28,6 +26,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
   XFile? _pickedFile;
   bool _isLoading = false;
   String? _selectedCurrency;
+
+  final List<String> _currencies = [
+    'ETB',
+    'USD',
+    'EUR',
+    'GBP',
+    'JPY',
+    'CAD',
+    'AUD',
+    'CHF',
+    'CNY',
+    'INR',
+    'BRL'
+  ];
+
+  final Map<String, String> _currencySymbols = {
+    'ETB': 'Br',
+    'USD': '\$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'CAD': 'C\$',
+    'AUD': 'A\$',
+    'CHF': 'CHF',
+    'CNY': '¥',
+    'INR': '₹',
+    'BRL': 'R\$',
+  };
 
   @override
   void initState() {
@@ -185,49 +211,145 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const SizedBox(height: 16),
 
-                  // Profile Image Section
-                  ProfileImageSection(
-                    onPickImage: _pickImage,
-                    profileImage: _getProfileImage(user, userData),
-                    profileImageWidget: _getProfileImageWidget(user, userData),
-                    email: user?.email,
+                  // Profile Image
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.1),
+                          backgroundImage: _getProfileImage(user, userData),
+                          child: _getProfileImageWidget(user, userData),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Email display
+                  Text(
+                    user?.email ?? 'No email',
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
 
                   const SizedBox(height: 24),
 
                   // Profile Form
-                  ProfileForm(
-                    formKey: _formKey,
-                    nameController: _nameController,
-                    selectedCurrency: _selectedCurrency,
-                    currencies: CurrencyUtils.availableCurrencies,
-                    currencySymbols: CurrencyUtils.currencySymbols,
-                    onCurrencyChanged: (value) {
-                      setState(() {
-                        _selectedCurrency = value;
-                      });
-                    },
-                    onInfoPressed: _showCurrencyInfoDialog,
-                    onSaveProfile: _saveProfile,
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Name field
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Display Name',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.person),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter your name';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Currency dropdown
+                        DropdownButtonFormField<String>(
+                          value: _selectedCurrency,
+                          decoration: InputDecoration(
+                            labelText: 'Preferred Currency',
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.currency_exchange),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.info_outline),
+                              onPressed: () {
+                                _showCurrencyInfoDialog();
+                              },
+                              tooltip: 'Currency Info',
+                            ),
+                          ),
+                          items: _currencies.map((currency) {
+                            return DropdownMenuItem<String>(
+                              value: currency,
+                              child: Text(
+                                  '$currency (${_currencySymbols[currency]})'),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedCurrency = value;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Save button
+                        ElevatedButton(
+                          onPressed: _saveProfile,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text(
+                            'Save Profile',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 24),
                   const Divider(),
                   const SizedBox(height: 16),
 
-                  // Settings Section
-                  SettingsListTile(
-                    icon: Icons.dark_mode,
-                    title: 'App Theme',
-                    subtitle: _getThemeText(
-                        Provider.of<ThemeProvider>(context).themeMode),
+                  // Additional settings
+                  ListTile(
+                    leading: Icon(
+                      Icons.dark_mode,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: const Text('App Theme'),
+                    subtitle: Text(_getThemeText(
+                        Provider.of<ThemeProvider>(context).themeMode)),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: _showThemeSelectionDialog,
                   ),
 
-                  SettingsListTile(
-                    icon: Icons.security,
-                    title: 'Change Password',
-                    subtitle: 'Update your account password',
+                  ListTile(
+                    leading: Icon(
+                      Icons.security,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: const Text('Change Password'),
+                    subtitle: const Text('Update your account password'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: _showChangePasswordDialog,
                   ),
 
@@ -330,13 +452,109 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return null;
   }
 
+  Map<String, dynamic> _getCurrencyInfo(String currencyCode) {
+    final Map<String, Map<String, dynamic>> currencyInfo = {
+      'ETB': {
+        'name': 'Ethiopian Birr',
+        'code': 'ETB',
+        'symbol': 'Br',
+        'country': 'Ethiopia',
+        'info':
+            'The Birr has been the currency of Ethiopia since 1893. The name "Birr" comes from the local word for silver. It is subdivided into 100 santim.'
+      },
+      'USD': {
+        'name': 'US Dollar',
+        'code': 'USD',
+        'symbol': '\$',
+        'country': 'United States',
+        'info': 'The world\'s primary reserve currency.'
+      },
+      'EUR': {
+        'name': 'Euro',
+        'code': 'EUR',
+        'symbol': '€',
+        'country': 'Euro Zone',
+        'info':
+            'Official currency of 19 of the 27 member states of the European Union.'
+      },
+      'GBP': {
+        'name': 'British Pound',
+        'code': 'GBP',
+        'symbol': '£',
+        'country': 'United Kingdom',
+        'info': 'The world\'s oldest currency still in use.'
+      },
+      'JPY': {
+        'name': 'Japanese Yen',
+        'code': 'JPY',
+        'symbol': '¥',
+        'country': 'Japan',
+        'info': 'Third most traded currency in the foreign exchange market.'
+      },
+      'CNY': {
+        'name': 'Chinese Yuan',
+        'code': 'CNY',
+        'symbol': '¥',
+        'country': 'China',
+        'info': 'Official currency of the People\'s Republic of China.'
+      },
+      'INR': {
+        'name': 'Indian Rupee',
+        'code': 'INR',
+        'symbol': '₹',
+        'country': 'India',
+        'info': 'The official currency of India.'
+      }
+    };
+
+    // Default to USD if currency not found in our info map
+    return currencyInfo[currencyCode] ??
+        {
+          'name': currencyCode,
+          'code': currencyCode,
+          'symbol': _currencySymbols[currencyCode] ?? currencyCode,
+          'country': 'Multiple Countries',
+          'info': 'No additional information available'
+        };
+  }
+
   void _showCurrencyInfoDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        final currencyInfo =
-            CurrencyUtils.getCurrencyInfo(_selectedCurrency ?? 'ETB');
-        return CurrencyInfoDialog(currencyInfo: currencyInfo);
+        final currencyInfo = _getCurrencyInfo(_selectedCurrency ?? 'ETB');
+        return AlertDialog(
+          title: Text('${currencyInfo['name']} (${currencyInfo['code']})'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: Icon(Icons.monetization_on,
+                    color: Theme.of(context).colorScheme.primary),
+                title: const Text('Symbol'),
+                subtitle: Text(currencyInfo['symbol']),
+              ),
+              ListTile(
+                leading: Icon(Icons.flag,
+                    color: Theme.of(context).colorScheme.primary),
+                title: const Text('Country'),
+                subtitle: Text(currencyInfo['country']),
+              ),
+              if (currencyInfo['info'] != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: Text(currencyInfo['info']!),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
       },
     );
   }
@@ -358,16 +576,251 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return const ThemeSelectionDialog();
+        final themeProvider = Provider.of<ThemeProvider>(context);
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.dark_mode,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              const Text('Select Theme'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                title: const Text('Light Theme'),
+                subtitle: const Text('Use light colors'),
+                value: ThemeMode.light,
+                groupValue: themeProvider.themeMode,
+                onChanged: (ThemeMode? value) {
+                  if (value != null) {
+                    themeProvider.setThemeMode(value);
+                    Navigator.pop(context);
+                  }
+                },
+                secondary: const Icon(Icons.light_mode),
+              ),
+              RadioListTile<ThemeMode>(
+                title: const Text('Dark Theme'),
+                subtitle: const Text('Use dark colors'),
+                value: ThemeMode.dark,
+                groupValue: themeProvider.themeMode,
+                onChanged: (ThemeMode? value) {
+                  if (value != null) {
+                    themeProvider.setThemeMode(value);
+                    Navigator.pop(context);
+                  }
+                },
+                secondary: const Icon(Icons.nightlight_round),
+              ),
+              RadioListTile<ThemeMode>(
+                title: const Text('System Default'),
+                subtitle: const Text('Follow system theme'),
+                value: ThemeMode.system,
+                groupValue: themeProvider.themeMode,
+                onChanged: (ThemeMode? value) {
+                  if (value != null) {
+                    themeProvider.setThemeMode(value);
+                    Navigator.pop(context);
+                  }
+                },
+                secondary: const Icon(Icons.auto_mode),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
       },
     );
   }
 
   void _showChangePasswordDialog() {
+    final _currentPasswordController = TextEditingController();
+    final _newPasswordController = TextEditingController();
+    final _confirmPasswordController = TextEditingController();
+    bool _obscureCurrentPassword = true;
+    bool _obscureNewPassword = true;
+    bool _obscureConfirmPassword = true;
+    bool _isChangingPassword = false;
+    String? _changePasswordError;
+
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
-        return PasswordChangeDialog(parentContext: context);
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.security,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Change Password'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_changePasswordError != null)
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .error
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _changePasswordError!,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    TextFormField(
+                      controller: _currentPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Current Password',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureCurrentPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              _obscureCurrentPassword =
+                                  !_obscureCurrentPassword;
+                            });
+                          },
+                        ),
+                      ),
+                      obscureText: _obscureCurrentPassword,
+                      enabled: !_isChangingPassword,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _newPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'New Password',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureNewPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              _obscureNewPassword = !_obscureNewPassword;
+                            });
+                          },
+                        ),
+                        helperText: 'At least 6 characters',
+                      ),
+                      obscureText: _obscureNewPassword,
+                      enabled: !_isChangingPassword,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Confirm New Password',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_reset),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
+                            });
+                          },
+                        ),
+                      ),
+                      obscureText: _obscureConfirmPassword,
+                      enabled: !_isChangingPassword,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed:
+                      _isChangingPassword ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: _isChangingPassword
+                      ? null
+                      : () {
+                          _changePasswordInternal(
+                            setDialogState,
+                            dialogContext,
+                            _currentPasswordController.text,
+                            _newPasswordController.text,
+                            _confirmPasswordController.text,
+                            (error) {
+                              setDialogState(() {
+                                _changePasswordError = error;
+                              });
+                            },
+                            () {
+                              setDialogState(() {
+                                _isChangingPassword = true;
+                              });
+                            },
+                            () {
+                              setDialogState(() {
+                                _isChangingPassword = false;
+                              });
+                            },
+                          );
+                        },
+                  child: _isChangingPassword
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Update Password'),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
   }

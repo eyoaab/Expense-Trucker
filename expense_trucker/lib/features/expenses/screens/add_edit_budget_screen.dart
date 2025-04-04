@@ -90,7 +90,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
           amount: amount,
           month: _selectedMonth,
           year: _selectedYear,
-          currency: authProvider.userData?.preferredCurrency ?? 'USD',
+          currency: authProvider.userData?.preferredCurrency ?? 'ETB',
         );
 
         if (mounted) {

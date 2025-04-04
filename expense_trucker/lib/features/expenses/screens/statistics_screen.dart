@@ -160,7 +160,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         child: DropdownButtonFormField<String>(
                           value: _selectedPeriod,
                           decoration: const InputDecoration(
-                            contentPadding: EdgeInsets.only(left: 4),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 4),
                             border: OutlineInputBorder(),
                           ),
                           items: _periods.map((period) {
@@ -172,14 +172,40 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                           onChanged: _changePeriod,
                         ),
                       ),
-                      // second child
-                      if (_selectedPeriod == 'Monthly') ...[
+                      if (_selectedPeriod != 'Monthly') ...[
                         const SizedBox(width: 8),
+                        Expanded(
+                          child: DropdownButtonFormField<int>(
+                            value: _selectedYear,
+                            decoration: const InputDecoration(
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 4),
+                              border: OutlineInputBorder(),
+                            ),
+                            items: List.generate(5, (index) {
+                              final year = DateTime.now().year - 2 + index;
+                              return DropdownMenuItem<int>(
+                                value: year,
+                                child: Text(year.toString()),
+                              );
+                            }),
+                            onChanged: (value) =>
+                                value != null ? _changeYear(value) : null,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (_selectedPeriod == 'Monthly') ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
                         Expanded(
                           child: DropdownButtonFormField<int>(
                             value: _selectedMonth,
                             decoration: const InputDecoration(
-                              contentPadding: EdgeInsets.only(left: 4),
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 4),
                               border: OutlineInputBorder(),
                             ),
                             items: List.generate(12, (index) {
@@ -194,34 +220,33 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                 value != null ? _changeMonth(value) : null,
                           ),
                         ),
-                      ],
-                      // third child
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: DropdownButtonFormField<int>(
-                          value: _selectedYear,
-                          decoration: const InputDecoration(
-                            contentPadding: EdgeInsets.only(left: 4),
-                            border: OutlineInputBorder(),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: DropdownButtonFormField<int>(
+                            value: _selectedYear,
+                            decoration: const InputDecoration(
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 4),
+                              border: OutlineInputBorder(),
+                            ),
+                            items: List.generate(5, (index) {
+                              final year = DateTime.now().year - 2 + index;
+                              return DropdownMenuItem<int>(
+                                value: year,
+                                child: Text(year.toString()),
+                              );
+                            }),
+                            onChanged: (value) =>
+                                value != null ? _changeYear(value) : null,
                           ),
-                          items: List.generate(5, (index) {
-                            final year = DateTime.now().year - 2 + index;
-                            return DropdownMenuItem<int>(
-                              value: year,
-                              child: Text(year.toString()),
-                            );
-                          }),
-                          onChanged: (value) =>
-                              value != null ? _changeYear(value) : null,
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 16),
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _expenses.isEmpty

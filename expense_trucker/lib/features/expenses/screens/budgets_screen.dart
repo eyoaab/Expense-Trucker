@@ -202,8 +202,12 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _buildContent(),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFF9AA33),
         onPressed: _addBudget,
-        child: const Icon(Icons.add),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -407,7 +411,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Spent: \$${spent.toStringAsFixed(2)}',
+                      'Spent: ${spent.toStringAsFixed(2)}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     Text(
@@ -424,7 +428,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 if (isOverBudget) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'Over by: \$${(spent - budget.amount).toStringAsFixed(2)}',
+                    'Over by: ${(spent - budget.amount).toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.red,
                       fontWeight: FontWeight.bold,
@@ -433,7 +437,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
                 ],
                 const SizedBox(height: 8),
                 Text(
-                  'Remaining: \$${budget.remaining > 0 ? budget.remaining.toStringAsFixed(2) : '0.00'}',
+                  'Remaining: ${budget.remaining > 0 ? budget.remaining.toStringAsFixed(2) : '0.00'}',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: budget.remaining > 0 ? Colors.green : Colors.red,
