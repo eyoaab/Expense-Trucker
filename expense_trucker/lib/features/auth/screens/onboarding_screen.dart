@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import '../widgets/onboarding_widgets.dart';
+import '../services/navigation_service.dart';
 import '../../../core/providers/preferences_provider.dart';
-import 'login_screen.dart';
+import 'package:provider/provider.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -14,25 +15,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<OnboardingPage> _pages = [
-    const OnboardingPage(
-      title: 'Track Your Expenses',
-      description:
-          'Keep track of all your expenses in one place. See where your money goes.',
-      icon: Icons.account_balance_wallet,
-    ),
-    const OnboardingPage(
-      title: 'Set Budgets',
-      description:
-          'Create budgets for different categories and stay within your limits.',
-      icon: Icons.savings,
-    ),
-    const OnboardingPage(
-      title: 'Analyze Spending',
-      description:
-          'View detailed analytics and reports to understand your spending habits.',
-      icon: Icons.insert_chart,
-    ),
+  final List<Map<String, dynamic>> _pages = [
+    {
+      'title': 'Track Your Expenses',
+      'description':
+          'Keep track of your daily expenses and income with our easy-to-use interface',
+      'icon': Icons.track_changes,
+      'color': Colors.blue,
+    },
+    {
+      'title': 'Set Budgets',
+      'description':
+          'Create budgets for different categories and stay within your financial limits',
+      'icon': Icons.account_balance_wallet,
+      'color': Colors.green,
+    },
+    {
+      'title': 'View Analytics',
+      'description':
+          'Get detailed insights about your spending habits with beautiful charts and reports',
+      'icon': Icons.analytics,
+      'color': Colors.purple,
+    },
   ];
 
   @override
@@ -48,14 +52,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _completeOnboarding() {
-    // Mark first time user as false
-    Provider.of<PreferencesProvider>(context, listen: false)
-        .setFirstTimeUser(false);
-
-    // Navigate to login screen
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-    );
+    final prefsProvider =
+        Provider.of<PreferencesProvider>(context, listen: false);
+    prefsProvider.setFirstTimeUser(false);
+    NavigationService.navigateToLogin(context);
   }
 
   @override
@@ -68,76 +68,75 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _pages.length,
                 onPageChanged: _onPageChanged,
+                itemCount: _pages.length,
                 itemBuilder: (context, index) {
-                  return _pages[index];
+                  final page = _pages[index];
+                  return OnboardingPage(
+                    title: page['title'],
+                    description: page['description'],
+                    icon: page['icon'],
+                    iconColor: page['color'],
+                  );
                 },
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              padding: const EdgeInsets.all(40.0),
+              child: Column(
                 children: [
-                  // Skip button
-                  TextButton(
-                    onPressed: _completeOnboarding,
-                    child: Text(
-                      'Skip',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  OnboardingIndicator(
+                    currentPage: _currentPage,
+                    pageCount: _pages.length,
                   ),
-                  // Indicators
-                  Row(
-                    children: List.generate(
-                      _pages.length,
-                      (index) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: index == _currentPage ? 16 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: index == _currentPage
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(4),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _currentPage == _pages.length - 1
+                          ? _completeOnboarding
+                          : () {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            Theme.of(context).colorScheme.secondary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        _currentPage == _pages.length - 1
+                            ? 'Get Started'
+                            : 'Next',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                  // Next button
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_currentPage < _pages.length - 1) {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      } else {
-                        _completeOnboarding();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  if (_currentPage < _pages.length - 1) ...[
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: _completeOnboarding,
+                      child: Text(
+                        'Skip',
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.7),
+                          fontSize: 16,
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
                     ),
-                    child: Text(
-                      _currentPage < _pages.length - 1 ? 'Next' : 'Get Started',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -152,12 +151,14 @@ class OnboardingPage extends StatelessWidget {
   final String title;
   final String description;
   final IconData icon;
+  final Color iconColor;
 
   const OnboardingPage({
     super.key,
     required this.title,
     required this.description,
     required this.icon,
+    required this.iconColor,
   });
 
   @override
@@ -170,13 +171,13 @@ class OnboardingPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: iconColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 80,
-              color: Theme.of(context).colorScheme.primary,
+              color: iconColor,
             ),
           ),
           const SizedBox(height: 40),

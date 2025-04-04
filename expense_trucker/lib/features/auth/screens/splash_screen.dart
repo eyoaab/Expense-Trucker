@@ -62,44 +62,12 @@ class _SplashScreenState extends State<SplashScreen>
   void _checkAuthState() async {
     await Future.delayed(
         const Duration(milliseconds: 500)); // Short additional delay
-
-    if (!mounted) return;
-
-    // For development purposes, we'll skip the auth check and go straight to the home screen
-    if (kDebugMode) {
-      _navigateToHome();
-      return;
-    }
-
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final prefsProvider =
-        Provider.of<PreferencesProvider>(context, listen: false);
-    final isFirstTimeUser = prefsProvider.firstTimeUser;
-
-    if (isFirstTimeUser) {
-      _navigateToOnboarding();
-    } else if (authProvider.isAuthenticated) {
-      _navigateToHome();
-    } else {
-      _navigateToLogin();
-    }
+    _navigateToOnboarding();
   }
 
   void _navigateToOnboarding() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(builder: (_) => const OnboardingScreen()),
-    );
-  }
-
-  void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-    );
-  }
-
-  void _navigateToHome() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
     );
   }
 
